@@ -1,0 +1,328 @@
+---
+title: "Differential Expression Analysis of LncRNAs in Skeletal Muscle Following Acute Aerobic Exercise and Acute Resistance Exercise" 
+output: pdf_document
+author: Kassia Régnier
+---
+
+# **Summary**
+The following code is the R code used for the differential expression analysis performed in this thesis.   
+
+# Loading package libraries 
+```{r, message=FALSE,warning=FALSE}
+library(Biobase)
+library(BiocManager)
+library(dplyr)
+library(tidyverse)
+library(tibble)
+library(GEOquery)
+library(DESeq2)
+library(ggplot2)
+library(biomaRt)
+library(pheatmap)
+library(RColorBrewer)
+```
+
+# Reading in count and phenotype data 
+Here, we are reading in the gene expression data (GSE107934) using the GEOquery package.  
+```{r, message=FALSE}
+pdata_dson <- getGEO("GSE107934")
+pdata_dson <- pdata_dson[[1]] #access the expression set 
+citation("GEOquery")
+```
+
+## Organizing sample information 
+Then, we select relevant columns from the pData for our analysis, and create a table.  
+```{r,message=FALSE}
+pheno_dson <- pData(pdata_dson) %>% 
+  dplyr::select(geo_accession,
+                `exercise:ch1`,
+                `time:ch1`)
+```
+
+We rename two of the columns. 
+```{r,message=FALSE}
+pheno_dson$exercise <- pheno_dson$`exercise:ch1`
+pheno_dson$time <- pheno_dson$`time:ch1`
+```
+
+Now, we remove the old columns that have been renamed, leaving us with one column for time and one column for exercise.  
+```{r,message=FALSE}
+pheno_dson_clean = subset(pheno_dson, select = -c(`exercise:ch1`,`time:ch1`))
+```
+
+## Designating conditions
+We have five conditions to designate: Baseline, 1 hour post-AE, 4 hours post-AE, 1 hour post-RE, and 4 hours post-RE. 
+We must create factors after designating conditions, and input the factors into our table of phenotype data. 
+We then specify the reference level (Baseline) and include it in our table.  
+
+```{r,message=FALSE}
+treatment_dson <- c("Baseline", "AE_1", "AE_4", "RE_1","RE_4")
+rep_treat_dson <- c(rep("Baseline",1), rep("AE_1",1), rep("AE_4",1), rep("RE_1",1),rep("RE_4",1),
+                    rep("Baseline",1), rep("AE_1",1), rep("AE_4",1), rep("RE_1",1),rep("RE_4",1),
+                    rep("Baseline",1), rep("AE_1",1), rep("AE_4",1), rep("RE_1",1),rep("RE_4",1),
+                    rep("Baseline",1), rep("AE_1",1), rep("RE_1",1),rep("RE_4",1),
+                    rep("Baseline",1), rep("AE_1",1), rep("AE_4",1), rep("RE_1",1),rep("RE_4",1),
+                    rep("Baseline",1), rep("AE_1",1), rep("AE_4",1), rep("RE_1",1),rep("RE_4",1)) 
+
+factor_treat <- factor(rep_treat_dson) 
+pheno_dson_clean$treatment <- factor_treat
+releveld_treat <- relevel(pheno_dson_clean$treatment, ref = "Baseline")
+pheno_dson_clean$treatment = releveld_treat 
+``` 
+
+# Reading in count data 
+Now, we obtain the raw count data. Once read into R, the files must be untar'd before continuing. 
+```{r,eval=FALSE, message=FALSE}
+getGEOSuppFiles("GSE107934") 
+untar("GSE107934/GSE107934_RAW.tar", exdir = "dson") 
+```
+
+```{r,message=FALSE}
+my_files <- list.files("dson", full.names = TRUE) 
+```
+
+Here, we read our files and create a data frame to assess the files. 
+```{r,message=FALSE}
+count_read <- lapply(my_files, read.table) 
+count_df <- as.data.frame(count_read) 
+```
+
+## Organizing count data 
+Once we have read our files, we organize the count data into a count matrix. 
+Then, we organize our count matrix. We rename the row names as Ensembl gene ID's and select only the columns that contain expression data. 
+We make sure the row names of our phenotype data and the column names of our count matrix are the same. 
+```{r,message=FALSE}
+rownames(count_df) <- count_df$V1 
+```
+
+```{r,message=FALSE}
+new_count_df <- count_df %>%
+  dplyr::select(everything()[c(FALSE,TRUE)]) 
+```
+
+```{r,message=FALSE, eval=TRUE}
+new_count_df <- new_count_df[-c(2,4,6,8,10,
+                                12,14,16,18,20,
+                                22,24,26,28,30,
+                                32,34,36,38,40,
+                                42,44,46,48,50,
+                                52,54,56,58)] 
+cts_dson <- as.matrix(new_count_df) 
+colnames(cts_dson) = rownames(pheno_dson_clean) 
+
+
+```
+
+# Creating the DESEqDataSet 
+Following this, we create a DESeqDataSet using the count matrix, pheotype data, and study design (treatment).  
+```{r,message=FALSE}
+dds_dson <- DESeqDataSetFromMatrix(countData = cts_dson,
+                                   colData = pheno_dson_clean,
+                                   design = ~treatment)    
+```
+
+## Removing genes that are lowly expressed 
+We start the DESeqDataSet analysis by pre-filtering the low counts, keeping counts above 1. There are several reasons for this step. By reducing low counts, we decrease the memory size of the DESeqDataSet, and increase the speed of the transformation and testing functions in the DESeq2 package. Also, genes/transcripts having low counts are usually considered artifacts and removing them permits the mean-variance relationship in our data to be more accurately estimated (Law et al., 2016).
+```{r,message=FALSE}
+keep <- rowSums(counts(dds_dson)) > 1
+dds <- dds_dson[keep,]
+```
+
+# Differential Expression Analysis 
+Here, we perform the differential expression analysis. The function `DESeq()` performs the analysis in 3 steps:
+1. estimation of size factors: `estimateSizeFactors`
+2. estimation of dispersion: `estimateDispersions`
+3. Negative binomial generalized linear model fitting and Wald statistics: `nbinomWaldTest`
+```{r,message=FALSE}
+dds. <- DESeq(dds)
+```
+
+## Obtaining the results names 
+We provide `resultsNames()` to obtain the names of the coefficients.  
+```{r,message=FALSE}
+resultsNames(dds.) 
+``` 
+
+Then, we look at the distribution of our normalized count data. 
+```{r,echo=TRUE}
+boxplot(counts(dds., normalized = TRUE)) 
+```
+
+# Exploring and transforming the data 
+As RNA-seq data is often heteroskedastic, a variance stabilizing transformation (VST) (Tibshirani 1988; Huber et al. 2003; Anders and Huber 2010) is performed on the count data to obtain count values that are approximately homoskedastic. 
+```{r,message=FALSE}
+vst <- varianceStabilizingTransformation(dds.) 
+```
+
+Boxplot of the VST data. 
+```{r,echo=TRUE}
+boxplot(assay(vst))
+```
+
+## Principal Component Analysis (PCA) 
+We can now perform Principal Component Analysis (PCA) (with time and exercise as the groups of interests) to reduce the dimensionality of the data and observe trends, clusters, and outliers in our data. Here, the closer two points are, the more similar they are.   
+```{r,echo=TRUE}
+plotPCA(vst, intgroup = c("time", "exercise")) 
+```
+
+We can modify our PCA plot using `ggplot`. 
+```{r,echo=TRUE}
+pcaData <- plotPCA(vst, intgroup = c( "time", "exercise"), returnData = TRUE)
+percentVar <- round(100 * attr(pcaData, "percentVar"))
+
+ggplot(pcaData, aes(x = PC1, y = PC2, color = time, shape = exercise)) +
+  geom_point(size =3) +
+  xlab(paste0("PC1: ", percentVar[1], "% variance")) +
+  ylab(paste0("PC2: ", percentVar[2], "% variance")) +
+  coord_fixed() +
+  ggtitle("PCA with VST data")
+``` 
+
+# Computing results
+Now, we compute the results for each coefficient (each condition). 
+`results` provides us with a table of results. We can summarize some basic results using `summary`. Here, we provide the summary for only one condition.      
+```{r,echo=TRUE}
+re.ae.b.1 <- results(dds., name="treatment_AE_1_vs_Baseline")
+summary(re.ae.b.1) 
+```
+
+For the other coefficients. 
+```{r,message=FALSE}
+res.ae.b.4 <- results(dds., name = "treatment_AE_4_vs_Baseline")
+res.re.b.1 <- results(dds., name = "treatment_RE_1_vs_Baseline")
+res.re.b.4 <- results(dds., name = "treatment_RE_4_vs_Baseline")
+```
+
+## Log fold change shrinkage for visualization and ranking
+`lfcShrink` performs shrinkage of effect size, which is useful for visualization and ranking of genes. Again, using `summary` to obtain basic results. 
+```{r,echo=TRUE}
+#ae 1hr
+resLFC_ae.1hr <- lfcShrink(dds.,
+                           coef=2,
+                           res = re.ae.b.1) 
+summary(resLFC_ae.1hr)
+```
+
+Now, for the other coefficients. 
+```{r,message=FALSE}
+#ae_4hr
+resLFC_ae.b.4 <- lfcShrink(dds.,
+                           coef=3,
+                           res = res.ae.b.4) 
+#re 1 hr
+resLFC_re.b.1 <- lfcShrink(dds.,
+                           coef=4,
+                           res = res.re.b.1)
+#re 4 hr
+resLFC_re.1.4 <- lfcShrink(dds.,
+                           coef=5,
+                           res = res.re.b.4)
+``` 
+
+# Exploring results
+## MA-plot
+`Plot MA` shows the log2 fold changes due to a given variable over the mean of normalized counts for all samples in the DESeqDataSet. Points are coloured red if the adjusted p value is lower than 0.1. Here, we plot our results obtained from `results` ("Normal"), followed by the shrunken results obtained from `lfcShrink` ("apeglm). 
+```{r,message=FALSE}
+xlim <- c(1,1e5); ylim <- c(-11,11) #Define limits of plot 
+
+#ae.1hr
+plotMA(re.ae.b.1, ylim=ylim,main="Normal") 
+plotMA(resLFC_ae.1hr, xlim=xlim,ylim=ylim,main="apeglm")
+
+#ae.4hr
+plotMA(res.ae.b.4, ylim=ylim,main="Normal") #not run 
+plotMA(resLFC_ae.b.4,xlim=xlim,ylim=ylim,main="apeglm")
+#re.1hr
+plotMA(res.re.b.1, ylim=ylim,main="Normal")
+plotMA(resLFC_re.b.1,xlim=xlim,ylim=ylim,main="apeglm")
+
+#re.4hr
+plotMA(res.re.b.4, ylim=ylim,main="Normal") 
+plotMA(resLFC_re.1.4,xlim=xlim,ylim=ylim,main="apeglm")
+```
+
+## Filtering results
+We create a function to filter our results based on specific criteria. Here, our thresholds are adjusted *P*-values less than 0.05 and absolute log2FoldChange values of 0.58. Our results functions provides us with a data frame of filtered results. 
+```{r,message=FALSE}
+my_results = function(DESeqResults_class){
+  df = as.data.frame(DESeqResults_class)
+  filter_padj = df[df$padj < 0.05,]
+  filter_logFC = filter_padj[abs(filter_padj$log2FoldChange) > 0.58,]
+  clean_df = subset(filter_logFC, !is.na(baseMean))
+  r2c = rownames_to_column(clean_df, var = 'ensgene')
+  return(r2c)
+}
+```
+
+## Organizing gene annotations
+We create a function to annotate our results. 
+We annotate our genes according to the GRCh37.p13 assembly (same assembly used by Dickinson et al., 2018). 
+```{r,message=FALSE}
+my_mart <- useMart(biomart="ENSEMBL_MART_ENSEMBL",
+                    host="grch37.ensembl.org",
+                    path="/biomart/martservice",
+                    dataset="hsapiens_gene_ensembl")
+
+my_annotations_dickinson = function(x3){
+  y = getBM(attributes = c('ensembl_gene_id',
+                           'external_gene_name',
+                           'gene_biotype',
+                           'chromosome_name',
+                           'start_position',
+                           'end_position',
+                           'strand',
+                           'description'),
+            filters = c('ensembl_gene_id'),
+            values = x3$ensgene,
+            mart = my_mart)
+}
+```
+
+## Applying our new functions 
+We apply our new functions (results and annotations) to our results for each coefficient. 
+```{r,message=FALSE}
+#ae 1hr
+resLFC_ae.1hr_df <- as.data.frame(resLFC_ae.1hr)
+my_ae.1hr_df <- my_results(resLFC_ae.1hr_df)
+my_ae.1hr_df_anno <- my_annotations_dickinson(my_ae.1hr_df)
+final.ae_1hr <- left_join(my_ae.1hr_df,my_ae.1hr_df_anno,
+                          by=c('ensgene'='ensembl_gene_id'))
+```
+
+We see our final results for the first coefficient below (Baseline vs. 1 hour post-AE). 
+```{r,message=FALSE}
+final.ae_1hr 
+```
+
+```{r,message=FALSE}
+#ae_4hr
+ae_1.4_my.r_df <- my_results(resLFC_ae.b.4)
+ae_1.4_my.r_df_anno <- my_annotations_dickinson(ae_1.4_my.r_df)
+final.ae_4hr <- left_join(ae_1.4_my.r_df,ae_1.4_my.r_df_anno,
+                          by=c('ensgene'='ensembl_gene_id'))
+
+#re 1 hr
+re_b.1.r_df <- my_results(resLFC_re.b.1)
+re_b.1.r_df_anno <- my_annotations_dickinson(re_b.1.r_df)
+final.re_1hr <- left_join(re_b.1.r_df,re_b.1.r_df_anno,
+                          by=c('ensgene'='ensembl_gene_id'))
+
+#re 4 hr
+re_1.4.r_df <- my_results(resLFC_re.1.4)
+re_1.4.r_df_anno <- my_annotations_dickinson(re_1.4.r_df)
+final.re_4hr <- left_join(re_1.4.r_df,re_1.4.r_df_anno,
+                          by=c('ensgene'='ensembl_gene_id'))
+```
+
+# Exporting results into csv files 
+Finally, we export our results into individual csv files, where lncRNAs are filtered from other genes and transcripts. 
+```{r,message=FALSE, eval=FALSE}
+write_csv(final.ae_1hr, file = "/Users/kassiaregnier/Documents/regnier_thesis_results/AE_b.vs.1.csv",
+          append = FALSE) 
+write_csv(final.ae_4hr, file = "/Users/kassiaregnier/Documents/regnier_thesis_results/AE_b.vs.4.csv",
+          append = FALSE) 
+write_csv(final.re_1hr, file = "/Users/kassiaregnier/Documents/regnier_thesis_results/RE_b.vs.1.csv",
+          append = FALSE)
+write_csv(final.re_4hr, file = "/Users/kassiaregnier/Documents/regnier_thesis_results/RE_b.vs.4.csv",
+          append = FALSE)
+```
