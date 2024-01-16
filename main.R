@@ -8,48 +8,41 @@ library(biomaRt)
 library(pheatmap)
 library(RColorBrewer)
 
-pdata_dson <- getGEO("GSE107934")
-pdata_dson <- pdata_dson[[1]]
+pdata_dson <- getGEO("GSE107934")[[1]]
 citation("GEOquery")
 
 pheno_dson <- pData(pdata_dson) %>%
     dplyr::select(geo_accession,
                   `exercise:ch1`,
                   `time:ch1`)
-
-pheno_dson$exercise <- pheno_dson$`exercise:ch1`
-pheno_dson$time <- pheno_dson$`time:ch1`
-
-pheno_dson_clean = subset(pheno_dson, select= -c(`exercise:ch1`, `time:ch1`))
-
+pheno_dson_clean <- dplyr::rename(pheno_dson,
+                                  all_of(
+                                        c(exercise="exercise:ch1", time="time:ch1")
+                                      )
+                                  )
+## Annotating conditions and treatments
 treatment_dson <- c("Baseline", "AE_1", "AE_4", "RE_1","RE_4")
-rep_treat_dson <- c(rep("Baseline",1), rep("AE_1",1), rep("AE_4",1), rep("RE_1",1),rep("RE_4",1),
-                    rep("Baseline",1), rep("AE_1",1), rep("AE_4",1), rep("RE_1",1),rep("RE_4",1),
-                    rep("Baseline",1), rep("AE_1",1), rep("AE_4",1), rep("RE_1",1),rep("RE_4",1),
-                    rep("Baseline",1), rep("AE_1",1), rep("RE_1",1), rep("RE_4",1),
-                    rep("Baseline",1), rep("AE_1",1), rep("AE_4",1), rep("RE_1",1),rep("RE_4",1),
-                    rep("Baseline",1), rep("AE_1",1), rep("AE_4",1), rep("RE_1",1),rep("RE_4",1))
-
-factor_treat <- factor(rep_treat_dson)
-pheno_dson_clean = subset(pheno_dson, select = -c(`exercise:ch1`,`time:ch1`))
-
+rep_treat_dson <- rep(treatment_dson,6)[-18] # removes the 18th entry ("AE_4") as it was not in the final analysis
+factor_treat <- relevel(factor(rep_treat_dson), ref = "Baseline")
 pheno_dson_clean$treatment <- factor_treat
-releveld_treat <- relevel(pheno_dson_clean$treatment, ref = "Baseline")
-pheno_dson_clean$treatment = releveld_treat
-getGEOSuppFiles("GSE107934")
-untar("GSE107934/GSE107934_RAW.tar", exdir = "dson")
+pheno_dson_clean
 
-my_files <- list.files("dson", full.names=TRUE)
+## Getting count data
+if (!file.exists("raw/GSE107934_RAW.tar")) {
+    dir.create("raw")
+    getGEOSuppFiles("GSE107934", baseDir = "raw", makeDirectory = FALSE)
+}
+if (!file.exists("raw/dson")) untar("raw/GSE107934_RAW.tar", exdir = "raw/dson")
+
+my_files <- list.files("raw/dson", full.names=TRUE)
 count_read <- lapply(my_files, read.table)
 count_df <- as.data.frame(count_read)
-rownames(count_df) <- count_df$V1
 
+# Formatting dataframe
+rownames(count_df) <- count_df$V1
 new_count_df <- count_df %>%
     dplyr::select(everything()[c(FALSE,TRUE)])
 
-# new_count_df <- new_count_df[-seq(2,58,by=2)] # is this line necessary?
-
-length(seq(2,58,by=2))
 cts_dson <- as.matrix(new_count_df)
 cts_dson
 colnames(cts_dson) = rownames(pheno_dson_clean)
@@ -60,7 +53,9 @@ dds_dson <- DESeqDataSetFromMatrix(countData = cts_dson,
                        colData = pheno_dson_clean,
                        design = ~treatment)
 
+# Filtering all genes that have less than 5 reads across samples
 keep <- rowSums(counts(dds_dson)) > 1
+# keep <- rowSums(counts(dds_dson) >= 5)
 dds <-dds_dson[keep,]
 
 dds. <- DESeq(dds)
@@ -72,7 +67,6 @@ vst <- varianceStabilizingTransformation(dds.)
 boxplot(assay(vst))
 
 plotPCA(vst, intgroup = c("time", "exercise"))
-
 pcaData <- plotPCA(vst, intgroup = c("time", "exercise"), returnData = TRUE)
 percentVar <- round(100 * attr(pcaData, "percentVar"))
 ggplot(pcaData, aes(x=PC1, y=PC2, color=time, shape=exercise)) +
@@ -83,7 +77,7 @@ ggplot(pcaData, aes(x=PC1, y=PC2, color=time, shape=exercise)) +
     ggtitle("PCA with VST data")
 
 res.ae.b.1 <- results(dds., name="treatment_AE_1_vs_Baseline")
-summary(res.ae.b.1)
+summary(res.ae.b.1, alpha =0.05)
 
 res.ae.b.4 <- results(dds., name = "treatment_AE_4_vs_Baseline")
 res.re.b.1 <- results(dds., name = "treatment_RE_1_vs_Baseline")
@@ -206,3 +200,4 @@ final.ae_1hr %>% dplyr::select(ensgene, external_gene_name, log2FoldChange, lfcS
 final.ae_4hr %>% dplyr::select(ensgene, external_gene_name, log2FoldChange, lfcSE, pvalue, padj, gene_biotype) %>% head
 final.re_1hr %>% dplyr::select(ensgene, external_gene_name, log2FoldChange, lfcSE, pvalue, padj, gene_biotype) %>% head
 final.re_4hr %>% dplyr::select(ensgene, external_gene_name, log2FoldChange, lfcSE, pvalue, padj, gene_biotype) %>% head
+
