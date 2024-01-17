@@ -21,9 +21,14 @@ Exercise induces a multitude of physiological changes, and many of these are dow
 
 ![lncRNAs after Aerobic Exercise](images/lncRNA_aerobic_volcano.png)
 
+***
+
 Then, we consider resistance exercise for both short- and long-term gene expression.
 
 ![lncRNAs after Resistance Exercise](images/lncRNA_resistance_volcano.png)
+
+***
+
 
 This project is a collaboration between the [Muscle Physiology Lab](https://skhs.queensu.ca/qmpl/) at Queen's University and the [Clarke Laboratory for Quantitative Exercise Biology](https://www.sfu.ca/clarkelab-bpk.html) at Simon Fraser University.
 

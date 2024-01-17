@@ -23,6 +23,8 @@ alt="lncRNAs after Aerobic Exercise" />
 Exercise</figcaption>
 </figure>
 
+------------------------------------------------------------------------
+
 Then, we consider resistance exercise for both short- and long-term gene
 expression.
 
@@ -32,6 +34,8 @@ alt="lncRNAs after Resistance Exercise" />
 <figcaption aria-hidden="true">lncRNAs after Resistance
 Exercise</figcaption>
 </figure>
+
+------------------------------------------------------------------------
 
 This project is a collaboration between the [Muscle Physiology
 Lab](https://skhs.queensu.ca/qmpl/) at Queen’s University and the
