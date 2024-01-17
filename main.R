@@ -1,14 +1,7 @@
-library(Biobase)
-library(BiocManager)
-library(tidyverse)
-library(GEOquery)
-library(DESeq2)
-library(ggplot2)
-library(biomaRt)
-library(pheatmap)
-library(RColorBrewer)
-library(ggrepel)
-library(patchwork)
+packages <- c("Biobase", "BiocManager", "tidyverse", "GEOquery", "DESeq2", "biomaRt", "pheatmap", "RColorBrewer", "ggrepel", "patchwork", "apeglm")
+
+if (!require("pacman")) install.packages("pacman") # package manager
+pacman::p_load(char=packages) # Loads packages
 
 write_results = FALSE
 pdata_dson <- getGEO("GSE107934")[[1]]
@@ -225,7 +218,7 @@ df_re_4 <- as.data.frame(res_re_4$normal_results) %>%
     rownames_to_column(var = "ensgene")
 
 anno_DF<- function (df) {
-    anno <- my_annotations_dickinson(tdf)
+    anno <- my_annotations_dickinson(df)
     anno_gene <- dplyr::distinct(anno)
     df$anno <- anno[match(df$ensgene, anno_gene$ensembl_gene_id),]$external_gene_name
     df$biotype <- anno[match(df$ensgene, anno_gene$ensembl_gene_id),]$gene_biotype
