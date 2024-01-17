@@ -76,49 +76,32 @@ ggplot(pcaData, aes(x=PC1, y=PC2, color=time, shape=exercise)) +
     coord_fixed() +
     ggtitle("PCA with VST data")
 
-res.ae.b.1 <- results(dds., name="treatment_AE_1_vs_Baseline")
-summary(res.ae.b.1, alpha =0.05)
+generate_deseq_results <- function(dds., name=name, coef=coef) {
+    res_norm <- results(dds., name=name)
+    shrunk_res <- lfcShrink(dds., coef=coef, res=res_norm)
+    return(list(normal_results=res_norm, apeglm_results=shrunk_res, exp_name=name))
+}
 
-res.ae.b.4 <- results(dds., name = "treatment_AE_4_vs_Baseline")
-res.re.b.1 <- results(dds., name = "treatment_RE_1_vs_Baseline")
-res.re.b.4 <- results(dds., name = "treatment_RE_4_vs_Baseline")
+generate_MA_plots <- function(res, xlim=c(1,1e5), ylim=c(-11,11)) {
+    par(mfrow=c(1,2))
+    plotMA(res$normal_results, ylim=ylim, main="Normal")
+    plotMA(res$apeglm_results,ylim=ylim, main="LFC apeglm")
+    mtext(res$exp_name, side = 3, line = -1, outer = TRUE, cex=1,font=2)
+}
 
-resLFC_ae.1 <- lfcShrink(dds.,
-                           coef=2,
-                           res=res.ae.b.1)
-
-resLFC_ae.b.4 <- lfcShrink(dds.,
-                           coef=3,
-                           res=res.ae.b.4)
-
-resLFC_re.b.1 <- lfcShrink(dds.,
-                           coef=4,
-                           res=res.re.b.1)
-
-resLFC_re.1.4 <- lfcShrink(dds.,
-                           coef=5,
-                           res=res.re.b.4)
-
-xlim <- c(1, 1e5)
-ylim <- c(-11,11)
+res_ae_1 <- generate_deseq_results(dds., name="treatment_AE_1_vs_Baseline", coef=2)
+res_ae_4 <- generate_deseq_results(dds., name="treatment_AE_4_vs_Baseline", coef=3)
+res_re_1 <- generate_deseq_results(dds., name="treatment_RE_1_vs_Baseline", coef=4)
+res_re_4 <- generate_deseq_results(dds., name="treatment_RE_4_vs_Baseline", coef=5)
+summary(res_ae_1$apeglm_results, alpha =0.05)
 
 # AE 1 hour
-plotMA(res.ae.b.1, ylim=ylim, main="Normal")
-plotMA(resLFC_ae.1,ylim=ylim, main="apeglm")
+generate_MA_plots(res=res_ae_1)
+generate_MA_plots(res=res_ae_4)
+generate_MA_plots(res=res_re_1)
+generate_MA_plots(res=res_re_4)
 
-# AE 4 hours
-plotMA(res.ae.b.4,ylim=ylim,main="Normal")
-plotMA(resLFC_ae.b.4,ylim=ylim,main="apeglm")
-
-# RE 1 hour
-plotMA(res.re.b.1,ylim=ylim,main="Normal")
-plotMA(resLFC_re.b.1,xlim=xlim,ylim=ylim,main="apeglm")
-
-# RE 4 hours
-plotMA(res.re.b.4,ylim=ylim,main="Normal")
-plotMA(resLFC_re.1.4,ylim=ylim,main="apeglm")
-
-my_results = function(DESeqResults_class) {
+DE_results = function(DESeqResults_class) {
     df = as.data.frame(DESeqResults_class)
     filter_padj = df[df$padj < 0.05,]
     filter_logFC = filter_padj[abs(filter_padj$log2FoldChange) > 0.58,]
@@ -146,29 +129,27 @@ my_annotations_dickinson = function(x3) {
 
 # Note, if this fails, use the following version of dbplyr:
 # devtools::install_version("dbplyr", version = "2.3.4")
-
-resLFC_ae.1hr_df <- as.data.frame(resLFC_ae.1)
-my_ae.1hr_df <- my_results(resLFC_ae.1hr_df)
+my_ae.1hr_df <- DE_results(res_ae_1$apeglm_results)
 my_ae.1hr_df_anno <- my_annotations_dickinson(my_ae.1hr_df)
 final.ae_1hr <- left_join(my_ae.1hr_df, my_ae.1hr_df_anno,
                           by=c("ensgene"="ensembl_gene_id"))
 
-ae_1.4_my.r_df <- my_results(resLFC_ae.b.4)
+ae_1.4_my.r_df <- DE_results(res_ae_4$apeglm_results)
 ae_1.4_my.r_df_anno <- my_annotations_dickinson(ae_1.4_my.r_df)
 final.ae_4hr <- left_join(ae_1.4_my.r_df, ae_1.4_my.r_df_anno,
                           by=c("ensgene"="ensembl_gene_id"))
 
-re_b.1.r_df <- my_results(resLFC_re.b.1)
+re_b.1.r_df <- DE_results(res_re_1$apeglm_results)
 re_b.1.r_df_anno <- my_annotations_dickinson(re_b.1.r_df)
 final.re_1hr <- left_join(re_b.1.r_df, re_b.1.r_df_anno,
                           by=c("ensgene"="ensembl_gene_id"))
 
-re_1.4.r_df <- my_results(resLFC_re.1.4)
+re_1.4.r_df <- DE_results(res_re_4$apeglm_results)
 re_1.4.r_df_anno <- my_annotations_dickinson(re_1.4.r_df)
 final.re_4hr <- left_join(re_1.4.r_df, re_1.4.r_df_anno,
                           by=c("ensgene"="ensembl_gene_id"))
 
-print_results <- function(){
+print_gene_results <- function(){
     cat("---1HR Aerobic Exercise Top DE genes---\n")
     final.ae_1hr %>% dplyr::select(ensgene, external_gene_name, log2FoldChange, lfcSE, pvalue, padj, gene_biotype) %>% head %>% print
     cat("\n---4HR Aerobic Exercise Top DE genes---\n")
@@ -178,9 +159,9 @@ print_results <- function(){
     cat("\n---4HR Resistance Exercise Top DE genes---\n")
     final.re_4hr %>% dplyr::select(ensgene, external_gene_name, log2FoldChange, lfcSE, pvalue, padj, gene_biotype) %>% head %>% print
 }
-print_results()
+print_gene_results() # from the supplementary
 
-print_tables <- function() {
+print_lncRNA_tables <- function() {
     cat("---1HR Aerobic Exercise Top DE LncRNAs---\n")
     final.ae_1hr %>% filter(gene_biotype == "lincRNA" | gene_biotype == "antisense" | gene_biotype == "sense_intronic") %>%
         dplyr::select(ensgene, external_gene_name, log2FoldChange, lfcSE, pvalue, padj, gene_biotype) %>% print
@@ -194,7 +175,7 @@ print_tables <- function() {
     final.re_4hr %>% filter(gene_biotype == "lincRNA" | gene_biotype == "antisense" ) %>%
         dplyr::select(ensgene, external_gene_name, log2FoldChange, lfcSE, pvalue, padj, gene_biotype) %>% print
 }
-print_tables()
+print_lncRNA_tables() # from the main-text
 
 final.ae_1hr %>% dplyr::select(ensgene, external_gene_name, log2FoldChange, lfcSE, pvalue, padj, gene_biotype) %>% head
 final.ae_4hr %>% dplyr::select(ensgene, external_gene_name, log2FoldChange, lfcSE, pvalue, padj, gene_biotype) %>% head
