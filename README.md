@@ -8,4 +8,4 @@ This project is a collaboration between the Muscle Physiology Lab at Queen's and
 
 # Usage
 - Install the required R packages
-- Run the script '' to generate the figures and perform the analysis
+- Run the script 'main.R' to download the GEO dataset, perform DESeq2 analysis, and generate the manuscript figures.
