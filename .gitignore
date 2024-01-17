@@ -4,3 +4,4 @@
 .Ruserdata
 # Data files
 raw/
+.DS_Store
