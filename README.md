@@ -25,8 +25,8 @@ Exercise</figcaption>
 
 ------------------------------------------------------------------------
 
-Then, we consider resistance exercise for both short- and long-term gene
-expression.
+Then, we consider how resistance exercise relates to both short- and
+long-term changes in lncRNA expression
 
 <figure>
 <img src="images/lncRNA_resistance_volcano.png"
@@ -42,6 +42,12 @@ Lab](https://skhs.queensu.ca/qmpl/) at Queen’s University and the
 [Clarke Laboratory for Quantitative Exercise
 Biology](https://www.sfu.ca/clarkelab-bpk.html) at Simon Fraser
 University.
+
+## Directories
+
+The ‘proc’ folder contains post-processed results and tables. The
+‘images’ folder contains generated figures from the manuscript and
+repository
 
 ## Usage
 
