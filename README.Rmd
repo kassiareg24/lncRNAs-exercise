@@ -29,9 +29,8 @@ knitr::include_graphics("images/Exercise_Modality.png")
 
 For a more granular view, we can examine the pairwise venn diagrams between resistance and aerobic exercise.
 
-```{r, echo=FALSE, out.width="50%"}
-knitr::include_graphics("images/Aerobic_Exercise.png")
-knitr::include_graphics("images/Resistance_Exercise.png")
+```{r, echo=FALSE, out.width="70%", fig.show="hold", fig.align="center", out.height="20%"}
+knitr::include_graphics(c("images/Aerobic_Exercise.png", "images/Resistance_Exercise.png"))
 
 knitr::include_graphics("images/1_Hour_Exercise.png")
 knitr::include_graphics("images/4_Hour_Exercise.png")
