@@ -18,7 +18,7 @@ along two different dimensions - exercise modality and exercise time.
 We first show similarities and differences in lncRNA expression after
 different durations and types of exercise.
 
-<img src="images/Exercise_Modality.png" width="50%" />
+<img src="images/Exercise_Modality.png" width="100%" />
 
 For a more granular view, we can examine the pairwise venn diagrams
 between resistance and aerobic exercise.

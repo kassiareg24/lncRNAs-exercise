@@ -23,7 +23,7 @@ Exercise induces a multitude of physiological changes, and many of these are dow
 
 We first show similarities and differences in lncRNA expression after different durations and types of exercise.
 
-```{r, echo=FALSE, out.width="50%"}
+```{r, echo=FALSE, out.width="100%"}
 knitr::include_graphics("images/Exercise_Modality.png")
 ```
 

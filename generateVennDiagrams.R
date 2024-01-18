@@ -1,7 +1,7 @@
 library(ggvenn)
 library(RColorBrewer)
 
-write_image = FALSE
+write_image = TRUE
 
 get_lnc_names <- function(df) {
     df %>%
@@ -36,7 +36,9 @@ make_venn <- function(listdata, title, fillname, saveImage, showElements=TRUE, n
         ggtitle(title) +
         theme(plot.title = element_text(color = "#0099f8", size = 18, face = "bold"))
     print(ggimage)
-    if (saveImage == TRUE) ggsave(paste0("images/",gsub(" ", "_", title), ".png"))
+    if (saveImage == TRUE) ggsave(paste0("images/",gsub(" ", "_", title),
+                                         ".png"),
+                                  bg="white")
 }
 make_venn(all_ex, title="Exercise Modality", fillname="Set3", saveImage=write_image, showElements=FALSE, nCol=4)
 make_venn(ae_1_4, title="Aerobic Exercise", fillname="Set2", saveImage=write_image, showElements=TRUE, nCol=3)
