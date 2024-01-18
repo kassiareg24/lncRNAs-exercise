@@ -49,7 +49,8 @@ repository
 ## Usage
 
 To use this package, simply run the `main.R` script in R version 4.3.0
-or higher. To generate venn diagrams, continue by running
+or higher. To generate venn diagrams, run the `generateVennDiagrams.R`
+script after.
 
 ## Attribution
 
