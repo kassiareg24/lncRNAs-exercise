@@ -28,8 +28,8 @@ aerobic exercise.
 
 ------------------------------------------------------------------------
 
-We can expand upon the differences in lncRNA expression after
-aerobic exercise compared to baseline using a volcano plot.
+We can expand upon the differences in lncRNA expression after aerobic
+exercise compared to baseline using a volcano plot.
 
 <img src="images/lncRNA_aerobic_volcano.png" width="100%" />
 

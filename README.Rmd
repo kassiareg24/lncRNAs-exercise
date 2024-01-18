@@ -38,7 +38,7 @@ knitr::include_graphics("images/4_Hour_Exercise.png")
 
 ***
 
-We can expand upon the the differences in lncRNA expression after aerobic exercise compared to baseline using a volcano plot.
+We can expand upon the differences in lncRNA expression after aerobic exercise compared to baseline using a volcano plot.
 
 ```{r, echo=FALSE, out.width="100%"}
 knitr::include_graphics("images/lncRNA_aerobic_volcano.png")
