@@ -1,4 +1,8 @@
-library(VennDiagram)
+library(ggvenn)
+library(RColorBrewer)
+
+write_image = FALSE
+
 get_lnc_names <- function(df) {
     df %>%
         filter(gene_biotype == "lincRNA" | gene_biotype == "antisense" | gene_biotype == "sense_intronic") %>%
@@ -6,34 +10,36 @@ get_lnc_names <- function(df) {
         unlist
 }
 
-ae_1_lnc <- get_lnc_names(final.ae_1hr)
-ae_4_lnc <- get_lnc_names(final.ae_4hr)
-re_1_lnc <- get_lnc_names(final.re_1hr)
-re_4_lnc <- get_lnc_names(final.re_4hr)
+ae_1_4 <- list(`1 Hour`=ae_1_lnc,
+               `4 Hours`=ae_4_lnc)
 
-ae_lnc <- union(ae_1_lnc, ae_4_lnc)
-re_lnc <- union(re_1_lnc, re_4_lnc)
+re_1_4 <- list(`1 Hour`=re_1_lnc,
+                `4 Hours`=re_4_lnc)
 
-get_sets <- function(set1, set2) {
-    total <- union(set1, set2)
-    cross <- length(intersect(set1, set2))
-    right <- length(setdiff(total, set1))
-    left <- length(total)-right
-    return(list(left=left, right=right, cross=cross))
+all_ex <- list(`1 Hour RE`=re_1_lnc,
+               `4 Hours RE`=re_4_lnc,
+               `1 Hour AE`=ae_1_lnc,
+               `4 Hours AE`=ae_4_lnc)
+
+ae_re_long <- list(`Aerobic`=ae_4_lnc,
+              `Resistance`=re_4_lnc)
+
+ae_re_short <- list(`Aerobic`=ae_1_lnc,
+                   `Resistance`=re_1_lnc)
+
+
+make_venn <- function(listdata, title, fillname, saveImage, showElements=TRUE, nCol=3) {
+    ggimage <- listdata %>%
+        ggvenn(show_elements = showElements,
+               label_sep = "\n",
+               fill_color = brewer.pal(name=fillname,n=nCol)) +
+        ggtitle(title) +
+        theme(plot.title = element_text(color = "#0099f8", size = 18, face = "bold"))
+    print(ggimage)
+    if (saveImage == TRUE) ggsave(paste0("images/",gsub(" ", "_", title), ".png"))
 }
-
-ae_1v4 <- get_sets(ae_1_lnc, ae_4_lnc)
-re_1v4 <- get_sets(re_1_lnc, re_4_lnc)
-ae_v_re <- get_sets(ae_lnc, re_lnc)
-
-grid.newpage()
-venn.plot <- draw.pairwise.venn(ae_1v4$left, ae_1v4$right, ae_1v4$cross, category=c("1hr Aerobic", "4hr Aerobic"))
-grid.draw(venn.plot)
-
-grid.newpage()
-venn.plot <- draw.pairwise.venn(re_1v4$left, re_1v4$right, re_1v4$cross, category=c("1hr Resistance", "4hr Resistance"))
-grid.draw(venn.plot)
-
-grid.newpage()
-venn.plot <- draw.pairwise.venn(ae_v_re$left, ae_v_re$right, ae_v_re$cross, category=c("Aerobic", "Resistance"))
-grid.draw(venn.plot)
+make_venn(all_ex, title="Exercise Modality", fillname="Set3", saveImage=write_image, showElements=FALSE, nCol=4)
+make_venn(ae_1_4, title="Aerobic Exercise", fillname="Set2", saveImage=write_image, showElements=TRUE, nCol=3)
+make_venn(re_1_4, title="Resistance Exercise", fillname="Set2", saveImage=write_image, showElements=TRUE, nCol=3)
+make_venn(ae_re_short, title="1 Hour Exercise", fillname="Set2", saveImage=write_image, showElements=TRUE, nCol=3)
+make_venn(ae_re_long, title="4 Hour Exercise", fillname="Set2", saveImage=write_image, showElements=TRUE, nCol=3)

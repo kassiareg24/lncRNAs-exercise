@@ -13,35 +13,32 @@ are downstream of changes in cellular gene expression. Though there has
 been a great deal of study into protein-coding genes, there has been
 little research into the response of non-coding RNAs in response to
 exercise. Here, we seek to address this gap. We examine this problem
-along two different dimensions - exercise modality and exercise time,
-starting with aerobic exercise.
+along two different dimensions - exercise modality and exercise time.
 
-<figure>
-<img src="images/lncRNA_aerobic_volcano.png"
-alt="lncRNAs after Aerobic Exercise" />
-<figcaption aria-hidden="true">lncRNAs after Aerobic
-Exercise</figcaption>
-</figure>
+We first show similarities and differences in lncRNA expression after
+different durations and types of exercise.
 
-------------------------------------------------------------------------
+<img src="images/Exercise_Modality.png" width="50%" />
 
-Then, we consider how resistance exercise relates to both short- and
-long-term changes in lncRNA expression
+For a more granular view, we can examine the pairwise venn diagrams
+between resistance and aerobic exercise.
 
-<figure>
-<img src="images/lncRNA_resistance_volcano.png"
-alt="lncRNAs after Resistance Exercise" />
-<figcaption aria-hidden="true">lncRNAs after Resistance
-Exercise</figcaption>
-</figure>
+<img src="images/Aerobic_Exercise.png" width="50%" /><img src="images/Resistance_Exercise.png" width="50%" /><img src="images/1_Hour_Exercise.png" width="50%" /><img src="images/4_Hour_Exercise.png" width="50%" />
 
 ------------------------------------------------------------------------
 
-This project is a collaboration between the [Muscle Physiology
-Lab](https://skhs.queensu.ca/qmpl/) at Queen’s University and the
-[Clarke Laboratory for Quantitative Exercise
-Biology](https://www.sfu.ca/clarkelab-bpk.html) at Simon Fraser
-University.
+We can expand upon the the differences in lncRNA expression after
+aerobic exercise compared to baseline using a volcano plot.
+
+<img src="images/lncRNA_aerobic_volcano.png" width="100%" />
+
+------------------------------------------------------------------------
+
+We can do the same for resistance exercise.
+
+<img src="images/lncRNA_resistance_volcano.png" width="100%" />
+
+------------------------------------------------------------------------
 
 ## Directories
 
@@ -52,4 +49,12 @@ repository
 ## Usage
 
 To use this package, simply run the `main.R` script in R version 4.3.0
-or higher.
+or higher. To generate venn diagrams, continue by running
+
+## Attribution
+
+This project is a collaboration between the [Muscle Physiology
+Lab](https://skhs.queensu.ca/qmpl/) at Queen’s University and the
+[Clarke Laboratory for Quantitative Exercise
+Biology](https://www.sfu.ca/clarkelab-bpk.html) at Simon Fraser
+University.

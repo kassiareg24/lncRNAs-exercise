@@ -1,5 +1,5 @@
-packages <- c("Biobase", "BiocManager", "tidyverse", "GEOquery", "DESeq2", "biomaRt", "pheatmap", "RColorBrewer", "ggrepel", "patchwork", "apeglm")
-
+packages <- c("BiocManager", "Biobase", "tidyverse", "GEOquery",
+              "DESeq2", "biomaRt", "pheatmap", "RColorBrewer", "ggrepel", "patchwork", "apeglm")
 if (!require("pacman")) install.packages("pacman") # package manager
 pacman::p_load(char=packages) # Loads packages
 
@@ -50,8 +50,8 @@ dds_dson <- DESeqDataSetFromMatrix(countData = cts_dson,
                        design = ~treatment)
 
 # Filtering all genes that have less than 5 reads across samples
-# keep <- rowSums(counts(dds_dson)) > 1
-keep <- rowSums(counts(dds_dson)>=5) >= 5
+keep <- rowSums(counts(dds_dson)) > 1
+# keep <- rowSums(counts(dds_dson)>=5) >= 5
 dds <-dds_dson[keep,]
 
 dds. <- DESeq(dds)
