@@ -27,7 +27,7 @@ We first show similarities and differences in lncRNA expression after different 
 knitr::include_graphics("images/Exercise_Modality.png")
 ```
 
-For a more granular view, we can examine the pairwise venn diagrams between resistance and aerobic exercise.
+For a more granular view, we can examine the pairwise venn diagrams between different durations of exercise, and between resistance and aerobic exercise.
 
 ```{r, echo=FALSE, out.width="50%", fig.show="hold", out.height="20%"}
 knitr::include_graphics(c("images/Aerobic_Exercise.png", "images/Resistance_Exercise.png"))
