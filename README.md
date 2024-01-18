@@ -23,7 +23,7 @@ different durations and types of exercise.
 For a more granular view, we can examine the pairwise venn diagrams
 between resistance and aerobic exercise.
 
-<img src="images/Aerobic_Exercise.png" width="70%" height="20%" style="display: block; margin: auto;" /><img src="images/Resistance_Exercise.png" width="70%" height="20%" style="display: block; margin: auto;" /><img src="images/1_Hour_Exercise.png" width="70%" height="20%" style="display: block; margin: auto;" /><img src="images/4_Hour_Exercise.png" width="70%" height="20%" style="display: block; margin: auto;" />
+<img src="images/Aerobic_Exercise.png" width="50%" height="20%" /><img src="images/Resistance_Exercise.png" width="50%" height="20%" /><img src="images/1_Hour_Exercise.png" width="50%" height="20%" /><img src="images/4_Hour_Exercise.png" width="50%" height="20%" />
 
 ------------------------------------------------------------------------
 
