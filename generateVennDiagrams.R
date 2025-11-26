@@ -10,6 +10,11 @@ get_lnc_names <- function(df) {
         unlist
 }
 
+ae_1_lnc <- get_lnc_names(final.ae_1hr)
+ae_4_lnc <- get_lnc_names(final.ae_4hr)
+re_1_lnc <- get_lnc_names(final.re_1hr)
+re_4_lnc <- get_lnc_names(final.re_4hr)
+
 ae_1_4 <- list(`1 Hour`=ae_1_lnc,
                `4 Hours`=ae_4_lnc)
 
